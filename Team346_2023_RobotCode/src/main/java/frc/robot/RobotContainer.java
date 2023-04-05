@@ -175,10 +175,10 @@ public class RobotContainer {
     HashMap<String, Command> eventMap = new HashMap<>();
     SwerveAutoBuilder builder = new SwerveAutoBuilder(
         drivetrain::getPose, // odometry position
-        drivetrain::resetOdometry,
+        drivetrain::resetPose,
         new PIDConstants(0.05,0,0),
         new PIDConstants(1,0,0),
-        speeds -> drivetrain.drive(speeds, true), // this sets the motor powers
+        speeds -> drivetrain.drive(speeds, false), // this sets the motor powers
         eventMap,
         true,
         drivetrain);
@@ -309,7 +309,7 @@ public class RobotContainer {
     //           new AutoBalance());
 
                var group7 = PathPlanner.loadPath("Move", new PathConstraints(1, 1));
-               Command auto11 = builder.followPath(group7);
+               Command auto11 = builder.fullAuto(group7);
 
             // autoChooser.addOption("2 Cube Open", twoCubeOpen);
             // autoChooser.addOption("3 Cube Open", threeCubeOpen);

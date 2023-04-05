@@ -19,6 +19,7 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.Robot;
 
 public class SwerveModule extends SubsystemBase{
     CANSparkMax driveMotor, turnMotor;
@@ -33,6 +34,10 @@ public class SwerveModule extends SubsystemBase{
     SparkMaxPIDController driveController, turnController;
 
     double wantedDelta, wantedAngle;
+
+    double driveOutput;// pls fix this i  didnt have time
+    Rotation2d wantedAngleRotation2d;
+    double simDriveDistance;
 
     public SwerveModule(
                         int driveMotorID,
@@ -85,14 +90,23 @@ public class SwerveModule extends SubsystemBase{
         driveMotor.burnFlash();
         turnMotor.burnFlash();
         
+        driveOutput = 0;
+        wantedAngleRotation2d = new Rotation2d();
+        simDriveDistance = 0;
         //syncTurnEncoders(); Might need
+    }
+    @Override
+    public void simulationPeriodic(){
+        simDriveDistance += driveOutput * 0.02; // pls dont assume perfect accel but i dont have time to fix it rn
+        driveEncoder.setPosition(simDriveDistance);
+        turnEncoder.setPosition(wantedAngle);
+        
     }
 
     public SwerveModuleState getState() {
         Rotation2d currentAngle = Rotation2d.fromDegrees(turnEncoder.getPosition());
         return new SwerveModuleState(driveEncoder.getVelocity(), currentAngle);
     }
-
     public double deltaAdjustedAngle(double target, double current) {
         return((target - current + 180) % 360 + 360) %360 -180;
     }
@@ -102,11 +116,13 @@ public class SwerveModule extends SubsystemBase{
     public void setState(SwerveModuleState state) {
         Rotation2d currentAngle = Rotation2d.fromDegrees(turnEncoder.getPosition());
         wantedAngle = state.angle.getDegrees();
+        wantedAngleRotation2d = state.angle;
         double delta = deltaAdjustedAngle(state.angle.getDegrees(), currentAngle.getDegrees());
         // double currentAngle = turnEncoder.getPosition();
         // double delta = deltaAdjustedAngle(state.angle.getDegrees(), currentAngle);
         double velocityInput = state.speedMetersPerSecond;
-        double driveOutput = (state.speedMetersPerSecond) / 11.63659; // Testing showed we needed to divide by 11.63659, for some reason :( 
+        // driveOutput = (state.speedMetersPerSecond) / 11.63659; // Testing showed we needed to divide by 11.63659, for some reason :( 
+            driveOutput = (state.speedMetersPerSecond); // Testing showed we needed to divide by 11.63659, for some reason :( 
 
         if(Math.abs(delta) > 90) {
             driveOutput *= -1;
@@ -130,6 +146,7 @@ public class SwerveModule extends SubsystemBase{
     }
 
     public double getDistance() {
+        
         return driveEncoder.getPosition();
     }
 
@@ -176,6 +193,9 @@ public class SwerveModule extends SubsystemBase{
     public SwerveModulePosition getPosition() {
         double distance = getMetersDriven();
         Rotation2d angle = getTurnAngle();
+        if (Robot.isSimulation()){
+            return new SwerveModulePosition(simDriveDistance, wantedAngleRotation2d);
+        }
         return new SwerveModulePosition(distance, angle);
     };
     

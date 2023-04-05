@@ -14,6 +14,7 @@ import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.PneumaticsModuleType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.lib.utils.FieldUtil;
 import frc.robot.Constants;
 
 public class Drivetrain extends SubsystemBase{
@@ -124,6 +125,11 @@ public class Drivetrain extends SubsystemBase{
         SmartDashboard.putNumber("Gyro Yaw", getYaw());
 
     }
+    @Override
+    public void simulationPeriodic() {
+        FieldUtil.getDefaultField().setSwerveRobotPose(getPose(), getModuleStates(),
+        Constants.MODULE_KINEMATICS);
+    }
     
     public PIDConstants getDriveConstants() {
         driveConstants = new PIDConstants(Constants.DRIVE_P, Constants.DRIVE_I, Constants.DRIVE_D);
@@ -140,6 +146,10 @@ public class Drivetrain extends SubsystemBase{
 
     public void resetOdometry(Pose2d pose2d) {
         odometry.resetPosition(getHeading(), getModulePositions(), pose2d);
+    }
+    public void resetPose(Pose2d pose){
+        System.out.println("Resetting Pose");
+        odometry.resetPosition(getHeading(), getModulePositions(), pose);
     }
 
     private void updateOdometry() {
@@ -161,6 +171,7 @@ public class Drivetrain extends SubsystemBase{
         SmartDashboard.putNumber("DriveY", speed.vyMetersPerSecond);
         SmartDashboard.putNumber("DriveTheta", speed.omegaRadiansPerSecond);
         setModuleState(swerveStates);
+        System.out.println("Trying to drive");
     }
 
     public void brake() {
@@ -238,6 +249,14 @@ public class Drivetrain extends SubsystemBase{
             frontRight.getPosition(),
             backLeft.getPosition(),
             backRight.getPosition()
+        };
+    }
+    public SwerveModuleState[] getModuleStates() {
+        return new SwerveModuleState[] {
+            frontLeft.getState(),
+            frontRight.getState(),
+            backLeft.getState(),
+            backRight.getState()
         };
     }
 
